@@ -5,6 +5,7 @@
 #     名詞連: 名詞・接頭辞・接尾辞の連なり。複合語
 #     名詞ほか: 1 語ずつ。名詞・動詞・形容詞・形状詞・副詞・連体詞・接続詞・感動詞・代名詞・助詞・助動詞・接頭辞・接尾辞・記号
 #     動詞句・形容詞句・形状詞句: 前の名詞と助詞を添えた句（例: ボタンを押す）と、後ろの名詞を添えた句（例: 太い線）
+#     連体詞句: 連体詞と後ろの名詞をつないだ句（例: そのもの）
 #   連用形の動詞に続く動詞は 1 語の複合動詞にする（例: 読み込み直す）
 #   語は書字形の基本形。活用形の違いは 1 つにまとめる。照合形は corpus_count.py に渡す形で、用言は活用で変わらない語幹にする
 #   補助記号と空白は語に入れない
@@ -118,6 +119,9 @@ def scan(toks, where, f):
             continue
         flush()
         run = []
+        if p == '連体詞' and i + 1 < len(toks) and toks[i + 1].feature.pos1 == '名詞':
+            w = t.surface + toks[i + 1].surface
+            add('連体詞句', w, w, where, f)
         if p not in YOGEN:
             continue
         if i >= 2 and toks[i - 1].feature.pos1 == '助詞' and toks[i - 1].feature.pos2 in PARTICLE \
