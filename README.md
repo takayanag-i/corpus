@@ -1,4 +1,4 @@
-# copus
+# corpus
 
 カタカナ語がふつう使われる所を和語や漢語の造語で書いた箇所を見つけ、コーパスで一般的な言い方を確かめてから置き換える Claude Code のスキル。
 
@@ -16,7 +16,7 @@
 
 ## 入れ方
 
-このリポジトリの中身を `.claude/skills/copus/` に置くと、Claude Code から `/copus` で呼び出せる。
+このリポジトリの中身を `.claude/skills/corpus/` に置くと、Claude Code から `/corpus` で呼び出せる。
 
 `scripts/terms.py` には `pip install fugashi unidic-lite` が要る。
 
