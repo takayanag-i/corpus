@@ -23,7 +23,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CORPUS_DIR = os.environ.get('CORPUS_DIR', '.')
 CACHE = os.path.join(CORPUS_DIR, 'wiki_cache.json')
 cache = json.load(open(CACHE, encoding='utf-8')) if os.path.exists(CACHE) else {}
-UA = {'User-Agent': 'copus-term-check/2.0 (corpus frequency check)'}
+UA = {'User-Agent': 'corpus-term-check/2.0 (corpus frequency check)'}
 INTERVAL = 3.0
 
 
