@@ -1,12 +1,12 @@
 # 文書のフォルダから、1つのコーパスを作る
 # 使い方: python3 build_corpus.py <名前> <元のフォルダ> <コーパスのフォルダ> [--domain] [--ext .html,.md,.sgml,.po] [--exclude 正規表現]
-#   <コーパスのフォルダ>/<名前>.txt に本文を書く。ページの区切りは改ページ文字（\f）
-#   <コーパスのフォルダ>/corpora.json に、種類（base か domain）・ページ数・日本語の文字数・元のフォルダを記録する
-#   --domain: ドメイン固有のコーパスとして登録する。corpus_count.py は --domain で名前を指定したときだけ数える
-#   HTML は <main>・<article>・role="main" の要素の中だけを本文とし、目次やナビゲーションを除く
+#   <コーパスのフォルダ>/<名前>.txt に本文を書く。ページの区切りは改ページ文字 \f
+#   <コーパスのフォルダ>/corpora.json に、種類 base か domain・ページ数・日本語の文字数・元のフォルダを記録する
+#   --domain: ドメイン固有のコーパスとして登録する。corpus_count.py は --domain で名前を指定したときにカウントする
+#   HTML は <main>・<article>・role="main" の要素の中を本文とし、目次やナビゲーションを除く
 #   Markdown は先頭のフロントマターと {{ }} のマクロを除く
 #   SGML は <!-- --> のコメントとタグを除く。翻訳の原文がコメントに入っている文書に使う
-#   PO は msgstr の訳文だけを本文にする
+#   PO は msgstr の訳文を本文にする
 import os, re, sys, json, html, argparse
 
 JA = re.compile(r'[぀-ヿ一-鿿]')
