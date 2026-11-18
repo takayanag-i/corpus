@@ -1,9 +1,3 @@
-# 置き換えの決まりを、ファイル一覧の各ファイルに適用する
-# 使い方: python3 apply_terms.py <ファイル一覧> <決まり.json> [--dry] [--quote-line 正規表現]
-#   決まり.json: [{"from": 語, "to": 置き換え, "regex": 偽, "files": [当てるファイル], "skip_line": 当てない行の正規表現}, ...]。上から順に適用する
-#   regex が真の決まりは正規表現として適用し、to に \1 などを使える。それ以外は文字列のまま置き換える
-#   --quote-line に当たる行は、「」の中を変更しない。既定は人の発言を引用していそうな行
-#   --dry: 書き換えずに、ファイルごとの変更する行数と合計を出力する
 import re, sys, json, argparse
 ap = argparse.ArgumentParser(); ap.add_argument('files'); ap.add_argument('rules'); ap.add_argument('--dry', action='store_true')
 ap.add_argument('--quote-line', default=r'ユーザー|依頼|人の判断|人の指示|人の回答|の発言')
@@ -22,7 +16,7 @@ def apply_text(text, rs):
 def apply_line(line, rs):
     rs = [r for r in rs if not (r['skip'] and r['skip'].search(line))]
     if not QUOTE.search(line): return apply_text(line, rs)
-    parts = re.split(r'(「[^」]*」)', line)   # 「」の中の引用は変更しない
+    parts = re.split(r'(「[^」]*」)', line)
     return ''.join(s if s.startswith('「') and s.endswith('」') else apply_text(s, rs) for s in parts)
 
 total = 0
