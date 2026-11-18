@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# 基本のコーパスを取得して作る: MDN・OpenTelemetry・PostgreSQL・Kubernetes・Python の日本語版 → <出力フォルダ>/mdn.txt・otel.txt・postgresql.txt・kubernetes.txt・python.txt と corpora.json
-# 使い方: bash fetch_corpora.sh <出力フォルダ>   （ダウンロードは約 400MB。数分）
-# ドメイン固有のコーパスは、文書を取得してから build_corpus.py に --domain を付けて作る（README の「ドメイン固有のコーパス」）
 set -euo pipefail
 OUT=${1:?出力フォルダを指定する}
 HERE=$(cd "$(dirname "$0")" && pwd)

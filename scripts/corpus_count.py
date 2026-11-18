@@ -1,22 +1,3 @@
-# 句の使われ方をコーパスで数え、加重シェアで比べて、置き換えるかを判定する
-# 使い方: CORPUS_DIR=<フォルダ> python3 corpus_count.py [--context ui|web|prose] [--domain 名前[=重み] ...] [--min 10] [--absent-min 5] [--k 10] [--no-wiki] 句 [句 ...]
-#         CORPUS_DIR=<フォルダ> python3 corpus_count.py --pairs pairs.tsv [同じオプション] > counts.tsv
-#   pairs.tsv: 1 行 1 組。1 列目は組の名前、2 列目以降は比べる句で、最後の列が今の語の句。置き換え先の候補は何列並べてもよい
-#     1 つの列に 句|句 と並べると、件数を足して 1 つの句として比べる
-#   判定は 2 段で行う
-#     1 段: corpora.json に登録したコーパスで数える。種類が base のものはいつも数え、domain のものは --domain で名前を指定したときだけ数える
-#     2 段: 1 段で決まらない組だけ、日本語版 Wikipedia を足して数え直す。--no-wiki を付けると 2 段を行わない
-#   決まる条件。置き換え先は、今の語を除いて加重シェアが最も大きい句
-#     置き換え: 今の語が 0 件で置き換え先が --absent-min 件以上、または置き換え先の加重シェアが 0.6 以上で根拠が --min 件以上
-#     残す: 置き換え先の加重シェアが 0.4 未満で根拠が --min 件以上
-#     2 段でも決まらない組は、割れたか根拠が少ないとして残す
-#   wiki: 全文検索 API で、その句を引用符で囲んだ完全一致で含む記事の数。CORPUS_DIR/wiki_cache.json に残し、同じ句を問い合わせない
-#     問い合わせは --wiki-interval 秒おき。429 と通信の失敗は、待つ時間を倍にしながら 8 回まで続ける
-#   ほかのコーパス: その句を含むページの数
-#   加重シェア: 組の中で、コーパスごとに句の割合を取り、重みで平均する。句を 1 つも含まないコーパスは平均に入れない
-#     コーパスの重みは、文脈の重みに 件数/(件数+k) を掛けた値。件数はそのコーパスでの組の句の件数の合計
-#     文脈の重みは references/weights.csv（文脈,コーパス,重み）。ドメイン固有のコーパスの重みは --domain 名前=重み（省くと 2）
-#   根拠: 組の句すべての、数えたコーパスの件数の合計
 import os, sys, json, time, argparse, urllib.request, urllib.parse, urllib.error
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -136,7 +117,7 @@ def main():
     else:
         groups = [('-', a.phrases)]
     cols = ['wiki', *corpora]
-    print('\t'.join(['組', '句', '加重シェア', '根拠', '判定', '段', *[f'{c}_件数' for c in cols]]))
+    print('\t'.join(['組', '句', '加重シェア', '根拠', '判定', '段階', *[f'{c}_件数' for c in cols]]))
     for name, qs in groups:
         current = qs[-1]
         group = {q: count_local(q, corpora) for q in qs}
