@@ -1,63 +1,112 @@
 # corpus
 
-カタカナ語が一般に使われる箇所を和語や漢語の造語で書いた語を見つけ、コーパスで一般的な言い方を確認してから置き換える Claude Code のスキル。
+## 使用技術一覧
 
-## 置き換えの例
+- Python
+- Bash
+- Git
+- fugashi
+- unidic-lite
+- MediaWiki API
+- Claude Code
 
-| 今の語 | 置き換え |
-|---|---|
-| 画素 | ピクセル |
-| 道具 | ツール |
-| つまみ | スライダー |
-| 当てはめ | フィッティング |
-| 裏のスレッド | ワーカースレッド |
+## 目次
 
-決めた語の一覧は [references/terms.csv](references/terms.csv) を参照。置き換える語、残す語、文脈によって残す所を1つの表に並べ、根拠の数とカウントの方法を列に含む。
+1. [プロジェクトについて](#プロジェクトについて)
+2. [環境](#環境)
+3. [ディレクトリ構成](#ディレクトリ構成)
+4. [開発環境構築](#開発環境構築)
+5. [トラブルシューティング](#トラブルシューティング)
 
-## インストール
+## プロジェクト名
 
-このリポジトリの中身を `.claude/skills/corpus/` に置くと、Claude Code から `/corpus` で呼び出せる。
+corpus
 
-`scripts/terms.py` は `pip install fugashi unidic-lite` を必要とする。
+## プロジェクトについて
 
-## 決め方
+日本語の文書とコードで、カタカナ語が一般に使われる箇所を和語・漢語の造語で書いた語を見つけ、コーパスで一般的な言い方を確認してから置き換える Claude Code のスキルである。例: 画素→ピクセル、道具→ツール、つまみ→スライダー。
 
-| 項目 | 内容 |
-|---|---|
-| 拾う語 | 名詞・動詞・形容詞・形状詞・副詞など全品詞。動詞と形容詞は活用形を基本形にまとめ、前後の名詞を添えた句も拾う |
-| 比べる単位 | 単語でなく、例:「ボタンをクリック」と「ボタンを押」のように使う場面の句で比べる |
-| カウントの方法 | コーパスごとに、句を含む記事とページの数の割合を取る。割合は、そのコーパスでの件数が多いほど強く効かせて平均する |
-| 重み | UI の文言、ウェブの処理の言い方、説明の文の3つの文脈ごとに、コーパスの重みを [references/weights.csv](references/weights.csv) で決める。システム開発の語に合わせ、wiki を軽く、システム開発の文書とドメイン固有のコーパスを重くしている |
-| 判定の順 | システム開発の文書で先に決め、決まらない組に限り Wikipedia を追加して再カウントする |
-| 置き換える語 | 今の語がシステム開発の文書に無く置き換え先がある語と、組の中の加重シェアが 0.6 以上で根拠の数が十分な語 |
-| 残す語 | 加重シェアが割れた語、根拠の数が不十分な語、置き換え先が同じ文書で別の物を指す語 |
-| 対象のリポジトリの決め | 対象のリポジトリに使う語の決めの文書があれば、その決めを適用し、再カウントしない。置き換え先が文脈で変化する語と、削除しても意味が変化しない語は、1箇所ずつ手動で直す |
-| コードとの対応 | 文書がコードを説明しているときは、コードのコメントやメッセージと同じ語にする |
+手順と判定の基準は `SKILL.md` を参照。決めた語の一覧は `references/terms.csv`、文脈ごとのコーパスの重みは `references/weights.csv` を参照。
 
-手順は [SKILL.md](SKILL.md) を参照。
+## 環境
 
-## コーパス
+| 言語・ライブラリ | バージョン |
+| --- | --- |
+| Python | 3.10 以上 |
+| fugashi | 指定なし |
+| unidic-lite | 指定なし |
 
-基本のコーパスは次の6つで、常にカウントする。
+Python のバージョンは `SKILL.md` の記載である。このリポジトリはロックファイル、ビルド定義、Dockerfile を含まず、fugashi と unidic-lite のバージョンは固定していない。動作を確認した環境は Python 3.13.18、fugashi 1.5.2、unidic-lite 1.0.8 である。
 
-| コーパス | カウントするもの | 向き |
-|---|---|---|
-| Wikipedia 日本語版 | 句を含む記事の数。API の完全一致検索 | 漢語の学術用語に寄る |
-| MDN | 句を含むページの数 | ウェブとブラウザの処理の言い方 |
-| OpenTelemetry | 句を含むページの数 | ログ、トレース、計測の言い方 |
-| PostgreSQL 文書 | 句を含むページの数。英語の原文のコメントを除く | データベースと SQL の言い方 |
-| Kubernetes 文書 | 句を含むページの数 | インフラとコンテナの言い方 |
-| Python 文書 | 句を含むページの数。訳文に限る | 言語と標準ライブラリの言い方 |
+## ディレクトリ構成
 
-`bash scripts/fetch_corpora.sh <フォルダ>` で取得して作成する。
-
-### ドメイン固有のコーパス
-
-対象の分野の文書を、利用者が指定したときに追加する。例: その分野の製品のマニュアル、規格の訳、学会の用語集。
-
-```bash
-python3 scripts/build_corpus.py <名前> <文書のフォルダ> <コーパスのフォルダ> --domain
-CORPUS_DIR=<コーパスのフォルダ> python3 scripts/corpus_count.py --pairs pairs.tsv --context prose --domain <名前>=<重み>
+```
+.
+├── README.md
+├── SKILL.md
+├── references
+│   ├── terms.csv
+│   └── weights.csv
+└── scripts
+    ├── apply_terms.py
+    ├── build_corpus.py
+    ├── corpus_count.py
+    ├── fetch_corpora.sh
+    └── terms.py
 ```
 
-`--domain` を付けて作成したコーパスは、カウントするときに名前を指定した場合に使われる。
+## 開発環境構築
+
+### 起動
+
+corpus はアプリケーションを起動しない。このリポジトリの中身を `.claude/skills/corpus/` に配置すると、Claude Code から `/corpus` で呼び出せる。
+
+`terms.py` が使う形態素解析器を仮想環境にインストールし、基本のコーパスを作成する。コーパスのダウンロードは約 400MB で、所要時間は数分である。
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install fugashi unidic-lite
+bash scripts/fetch_corpora.sh <コーパスのフォルダ>
+```
+
+### 動作確認
+
+Wikipedia への問い合わせを省いて 1 組をカウントし、列名が `組`・`句`・`加重シェア`・`根拠`・`判定`・`段階` で始まる TSV が表示されることを確認する。
+
+```bash
+CORPUS_DIR=<コーパスのフォルダ> python3 scripts/corpus_count.py --no-wiki ピクセル数 画素数
+```
+
+### 停止
+
+常駐するプロセスは無い。`fetch_corpora.sh` と `corpus_count.py` の実行を中断するときは、実行した端末で Ctrl+C を入力する。
+
+### 環境変数の一覧
+
+| 変数名 | 役割 | 既定値 |
+| --- | --- | --- |
+| CORPUS_DIR | `corpus_count.py` が参照するコーパスのフォルダ。`corpora.json`、各コーパスの `.txt`、`wiki_cache.json` を置く | `.` |
+
+### コマンド一覧
+
+スクリプトは直接実行する。元のコマンドの列は、スクリプトが内部で実行するコマンドである。
+
+| コマンド | 実行する処理 | 元のコマンド |
+| --- | --- | --- |
+| `bash scripts/fetch_corpora.sh <出力フォルダ>` | MDN・OpenTelemetry・PostgreSQL・Kubernetes・Python の日本語版を取得し、基本のコーパスを作成する | `git clone --depth 1` と `python3 scripts/build_corpus.py` |
+| `python3 scripts/build_corpus.py <名前> <元のフォルダ> <コーパスのフォルダ> [--domain] [--ext .html,.md] [--exclude 正規表現]` | 文書のフォルダから 1 つのコーパスを作成し、`corpora.json` に登録する。`--domain` でドメイン固有のコーパスにする | − |
+| `python3 scripts/terms.py <ファイル一覧> [--min 2] [--pos 品詞,...] [--expect 語の一覧]` | ファイル一覧の日本語を形態素解析し、全品詞の語と用言の句を出現回数の順に TSV で出力する | − |
+| `python3 scripts/corpus_count.py [--context ui\|web\|prose] [--domain 名前=重み] [--min 10] [--absent-min 5] [--k 10] [--no-wiki] [--wiki-interval 3] 句 [句 ...]` | 句ごとに各コーパスの件数と加重シェアと判定を TSV で出力する | − |
+| `python3 scripts/corpus_count.py --pairs pairs.tsv [同じオプション]` | TSV に並べた組をまとめてカウントする | − |
+| `python3 scripts/apply_terms.py <ファイル一覧> <決まり.json> [--dry] [--quote-line 正規表現]` | 置き換えの決まりを上から順に適用する。`--dry` はファイルを書き換えず、変更する行数を出力する | − |
+
+## トラブルシューティング
+
+| 表示されるエラー | 原因 | 対処 |
+| --- | --- | --- |
+| `1: 出力フォルダを指定する` | `fetch_corpora.sh` の引数に出力フォルダが無い | 出力フォルダを引数に指定する |
+| `corpora.json に無いコーパス: <名前>。build_corpus.py で作る` | `--domain` に指定したコーパスが `CORPUS_DIR` の `corpora.json` に無い | `build_corpus.py` に `--domain` を付けて登録するか、`CORPUS_DIR` の値を確認する |
+| `weights.csv に文脈 <文脈> の行が無い` | `references/weights.csv` に `--context` の文脈の行が無い | `weights.csv` にその文脈の行を追加する |
+| `Wikipedia API に 8 回続けて失敗した: <パラメータ>` | Wikipedia API が 429 か通信の失敗を 8 回続けて返した | 時間をおいて再実行するか、`--wiki-interval` を大きくする。`--no-wiki` を指定すると Wikipedia に問い合わせない |
+| `漏れ<TAB><語>` と終了コード 1 | `--expect` の語がファイルに語として現れるのに、`terms.py` の一覧に無い | 一覧に目を通す前に `terms.py` の抽出を直す |
+| `ModuleNotFoundError: No module named 'fugashi'` | `terms.py` を実行した Python に fugashi が無い | 仮想環境に `pip install fugashi unidic-lite` でインストールし、その Python で実行する |
