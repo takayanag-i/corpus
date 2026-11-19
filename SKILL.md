@@ -158,3 +158,27 @@ Python は 3.10 以上。`terms.py` は fugashi と unidic-lite を必要とす�
 3. ページへは、変化する語句を含む短い文字列の置き換えで反映する。Notion なら `update_content` を使い、ページ全体を書き換える `replace_content` は使わない。ほかのセッションが同じページを編集していても、置き換えた語句のほかは変化しない
 4. 同じ語をページ全体で置き換えるとき、その語を含む長い文字列の置き換えを先に並べ、語だけの置き換えを最後に置く
 5. 図の中の文字は置き換えられない。図のラベルと本文の語がずれる置き換えはしない
+
+## コマンド一覧
+
+スクリプトは直接実行する。元のコマンドの列は、スクリプトが内部で実行するコマンドである。
+
+| コマンド | 実行する処理 | 元のコマンド |
+| --- | --- | --- |
+| `bash scripts/fetch_corpora.sh <出力フォルダ>` | MDN・OpenTelemetry・PostgreSQL・Kubernetes・Python の日本語版を取得し、基本のコーパスを作成する | `git clone --depth 1` と `python3 scripts/build_corpus.py` |
+| `python3 scripts/build_corpus.py <名前> <元のフォルダ> <コーパスのフォルダ> [--domain] [--ext .html,.md] [--exclude 正規表現]` | 文書のフォルダから 1 つのコーパスを作成し、`corpora.json` に登録する。`--domain` でドメイン固有のコーパスにする | − |
+| `python3 scripts/terms.py <ファイル一覧> [--min 2] [--pos 品詞,...] [--expect 語の一覧]` | ファイル一覧の日本語を形態素解析し、全品詞の語と用言の句を出現回数の順に TSV で出力する | − |
+| `python3 scripts/corpus_count.py [--context ui\|web\|prose] [--domain 名前=重み] [--min 10] [--absent-min 5] [--k 10] [--no-wiki] [--wiki-interval 3] 句 [句 ...]` | 句ごとに各コーパスの件数と加重シェアと判定を TSV で出力する | − |
+| `python3 scripts/corpus_count.py --pairs pairs.tsv [同じオプション]` | TSV に並べた組をまとめてカウントする | − |
+| `python3 scripts/apply_terms.py <ファイル一覧> <決まり.json> [--dry] [--quote-line 正規表現]` | 置き換えの決まりを上から順に適用する。`--dry` はファイルを書き換えず、変更する行数を出力する | − |
+
+## トラブルシューティング
+
+| 表示されるエラー | 原因 | 対処 |
+| --- | --- | --- |
+| `1: 出力フォルダを指定する` | `fetch_corpora.sh` の引数に出力フォルダが無い | 出力フォルダを引数に指定する |
+| `corpora.json に無いコーパス: <名前>。build_corpus.py で作る` | `--domain` に指定したコーパスが `CORPUS_DIR` の `corpora.json` に無い | `build_corpus.py` に `--domain` を付けて登録するか、`CORPUS_DIR` の値を確認する |
+| `weights.csv に文脈 <文脈> の行が無い` | `references/weights.csv` に `--context` の文脈の行が無い | `weights.csv` にその文脈の行を追加する |
+| `Wikipedia API に 8 回続けて失敗した: <パラメータ>` | Wikipedia API が 429 か通信の失敗を 8 回続けて返した | 時間をおいて再実行するか、`--wiki-interval` を大きくする。`--no-wiki` を指定すると Wikipedia に問い合わせない |
+| `漏れ<TAB><語>` と終了コード 1 | `--expect` の語がファイルに語として現れるのに、`terms.py` の一覧に無い | 一覧に目を通す前に `terms.py` の抽出を直す |
+| `ModuleNotFoundError: No module named 'fugashi'` | `terms.py` を実行した Python に fugashi が無い | 仮想環境に `pip install fugashi unidic-lite` でインストールし、その Python で実行する |
